@@ -1,0 +1,39 @@
+---
+title: "Clean data function"
+output: html_notebook
+
+
+```{r}
+library(tidyverse)
+library(dplyr)
+rawdat <- read_csv("raw-data.csv")
+```
+
+
+```{r}
+cleandat <- function(rawdat) {
+  rawdat <- rawdat %>% drop_na()
+
+  trialmean <- rawdat %>%
+    gather(key = "cr", value = "value", -1) %>%
+    mutate(crsub = substr(cr, 1, 5)) %>%
+    group_by(ID, crsub) %>%
+    summarize(mean = mean(value)) %>%
+    spread(crsub, mean)
+
+  repmean <- trialmean %>%
+    gather(key = "cr", value = "value", -1) %>%
+    mutate(csub = substr(cr, 1, 2)) %>%
+    group_by(ID, csub) %>%
+    summarize(mean = mean(value)) %>%
+    spread(csub, mean)
+
+  cleandat <- rawdat %>%
+    left_join(trialmean, by = "ID") %>%
+    left_join(repmean, by = "ID")
+}
+```
+
+```{r}
+cleandat <- cleandat(rawdat)
+```
